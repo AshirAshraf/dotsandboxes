@@ -403,7 +403,7 @@ class DotsAndBoxes {
         console.log("00000000000000 ----------------------  ");
         
         // this.socketClient
-        this.socketClient.emit('make_move',{index})
+        this.socketClient.emit('make_move',{index,roomId:this.roomId})
     }
 
     makeMovefromOpponent(index){
@@ -413,7 +413,18 @@ class DotsAndBoxes {
         }
     }
     socketClient=undefined
-
+    roomId=undefined
+    createRoom() {
+        this.socketClient.emit("create_room",null)
+    }
+    roomCreated(roomId){
+        this.roomId=roomId
+        console.log("ROOM ID --- >>",roomId);
+    }
+    joinRoom(roomId){
+        this.roomId=roomId
+        this.socketClient.emit('join_room',roomId)
+    }
     connectSocketServer() {
         const socket = io('http://localhost:3000');
         this.socketClient=socket
@@ -422,9 +433,14 @@ class DotsAndBoxes {
           const msg = input.value;
           socket.emit('chat message', msg);
           input.value = '';
-          
         }
-        socket.emit('make_move',"index")
+        socket.on("room_created",(roomId)=>{
+            this.roomCreated(roomId)
+        })
+        socket.on("error_message",(message)=>{
+            console.log(message);
+            
+        })
         socket.on("next_Move",(values)=>{
             console.log("************** ",values);
             this.makeMovefromOpponent(values.message.index)
@@ -441,6 +457,14 @@ try {
     
     let DAB= new DotsAndBoxes(4, 4)
     DAB.connectSocketServer()
+    document.getElementById("enterBtn").addEventListener("click", () => {
+    const roomId = document.getElementById("roomId").value;
+    console.log("Room entered:", roomId);
+        DAB.joinRoom(roomId)
+    });
+    setTimeout(()=>{
+        DAB.createRoom()
+    },2000)
 } catch (error) {
     console.error(error)   
 }
