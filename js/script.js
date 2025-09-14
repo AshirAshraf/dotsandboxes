@@ -266,10 +266,12 @@ class DotsAndBoxes {
             const filledLine = new Line(arrFirstPoint, arrSecondPoint, false, this.objCurrentPlayer.strPlayerColor)
             
             this.svg.append(filledLine.objLine);
-
+            let blnChangePlayer = true;
             // sidefilled function returns true if all 4 sides are drawn
-            if(objPoly.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName))
+            if(objPoly.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName)){
                 this.objCurrentPlayer.intPoints++;
+                blnChangePlayer = false
+            }
 
             const triangleHandler = this.triangleHandlers.get(objTriangleElement);
 
@@ -308,8 +310,9 @@ class DotsAndBoxes {
                 }
             }
 
-            // change to next player
-            this.changePlayer();
+            // change to next player if no square filled
+            if(blnChangePlayer)
+                this.changePlayer();
 
             // if one device, current player and same player be same
             if(this.blnSameDevice)
