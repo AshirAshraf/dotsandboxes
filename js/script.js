@@ -123,7 +123,8 @@ class DotsAndBoxes {
         this.setCurrentPlayer(0);
 
         this.makeGrid(intColumns, intRows)
-        this.objUser = new Player()
+        this.objUser = new Player();
+
     }
     /**
      * 
@@ -324,6 +325,18 @@ class DotsAndBoxes {
 
         const triangleOnClickBinded = triangleOnClick.bind(this);
         return triangleOnClickBinded
+    }
+
+    /**
+     * send triangle class object's arrCoordinates prop
+     * @param {*} arrCoordinates 
+     */
+    sideFilledDynamic(arrCoordinates){
+        const strCoordinates = String(`${arrCoordinates[0]} ${arrCoordinates[1]}`)
+        // 180,180 180,300 120,240
+        const objTriangle = this.arrAllTriangle.find(({arrCoordinates})=> String(`${arrCoordinates[0]} ${arrCoordinates[1]}`) == strCoordinates);
+
+        this.triangleOnClickWrapper(objTriangle)();
     }
     /**
      * 
