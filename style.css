@@ -1,0 +1,47 @@
+body {
+    background-color: black;
+    height: 100vh;
+    width: 100vw;
+}
+
+* {
+    color: white;
+}
+
+.title {
+    text-align: center;
+    margin-top: 20px;
+}
+
+line {
+    stroke-width: 3;
+}
+
+line.dotted {
+    stroke: white;
+    display: none;
+}
+
+.d-none {
+    display: none;
+}
+
+polygon.triangle {
+    fill: transparent;
+}
+
+polygon.triangle.untouched:hover+line.dotted {
+    display: block;
+    stroke-dasharray: 7px;
+}
+
+circle {
+    fill: white;
+    r: 5px;
+}
+
+.wrapper {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
