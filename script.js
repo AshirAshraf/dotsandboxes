@@ -224,11 +224,13 @@ class DotsAndBoxes {
         return [x,y]
     }
 
+    EACH_HANDLER={}
 
     addTriangleEventListener(arrTriangle) {
-        arrTriangle.forEach((objPoly) => {
-            const handler = this.triangleOnClickWrapper(objPoly);
+        arrTriangle.forEach((objPoly,index) => {
+            const handler = this.triangleOnClickWrapper(objPoly,index);
             this.triangleHandlers.set(objPoly.objTriangle, handler);
+            this.EACH_HANDLER[index]=handler
             objPoly.objTriangle.addEventListener('click', handler)
         })
     }
@@ -253,9 +255,10 @@ class DotsAndBoxes {
 
 
     }
-
-    triangleOnClickWrapper(objPoly) {
+    blnDontHavetoSend=false
+    triangleOnClickWrapper(objPoly,index) {
         const objTriangleElement = objPoly.objTriangle;
+        const self=this
         function triangleOnClick() {
             // check if current player
             if (this.objCurrentPlayer.intPlayerId !== this.objThisPlayer.intPlayerId) return;
@@ -309,8 +312,12 @@ class DotsAndBoxes {
             }
 
             // change to next player
-            this.changePlayer();
-
+            if (true && !this.blnDontHavetoSend) {
+                self.sendToOherPlayer(index)
+            }else{
+                this.changePlayer();
+            }
+            this.blnDontHavetoSend=false
             // if one device, current player and same player be same
             if(this.blnSameDevice)
                 this.objThisPlayer = this.objCurrentPlayer;
@@ -391,10 +398,49 @@ class DotsAndBoxes {
             this.objCurrentPlayer = this.arrUsers[0];
         else this.objCurrentPlayer = this.arrUsers[++intCurrentPlayer];
     }
+    
+    sendToOherPlayer (index) {
+        console.log("00000000000000 ----------------------  ");
+        
+        // this.socketClient
+        this.socketClient.emit('make_move',{index})
+    }
+
+    makeMovefromOpponent(index){
+        this.blnDontHavetoSend=true
+        if (this.EACH_HANDLER[index]) {
+            this.EACH_HANDLER[index]()
+        }
+    }
+    socketClient=undefined
+
+    connectSocketServer() {
+        const socket = io('http://localhost:3000');
+        this.socketClient=socket
+        function sendMessage() {
+          const input = document.getElementById('message');
+          const msg = input.value;
+          socket.emit('chat message', msg);
+          input.value = '';
+          
+        }
+        socket.emit('make_move',"index")
+        socket.on("next_Move",(values)=>{
+            console.log("************** ",values);
+            this.makeMovefromOpponent(values.message.index)
+        })
+        socket.on('chat message', function(msg) {
+          const item = document.createElement('li');
+          item.textContent = msg;
+          document.getElementById('messages').appendChild(item);
+        });
+    }
+
 }
 try {
     
-    this.objDotsAndBoxes = new DotsAndBoxes(4, 4)
+    let DAB= new DotsAndBoxes(4, 4)
+    DAB.connectSocketServer()
 } catch (error) {
     console.error(error)   
 }
