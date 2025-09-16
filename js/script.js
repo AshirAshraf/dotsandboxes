@@ -104,11 +104,20 @@ class DotsAndBoxes {
     /**
      * local or online
      */
-    blnSameDevice = true;
+    blnSameDevice = false;
 
     dummyNames = ["zayd", "ahyan", "johnny", "adil"];
 
-    intCurrentUser
+    intCurrentUser;
+    /**
+     * all event listeners added initially
+     */
+    blnEventListenerAdded = false;
+
+    /**
+     * move is made by other player
+     */
+    blnIncomingFromOtherPlayer = false;
 
 
     constructor(intColumns, intRows, intFullWidth = 600, intNoOfPlayers = 2) {
@@ -119,7 +128,7 @@ class DotsAndBoxes {
         this.intCenterDist = this.intVerticeDist / 2;
 
         this.setPlayers(intNoOfPlayers);
-        this.setThisPlayer(0);
+        // this.setThisPlayer(0);
         this.setCurrentPlayer(0);
 
         this.makeGrid(intColumns, intRows)
@@ -234,6 +243,7 @@ class DotsAndBoxes {
             this.EACH_HANDLER[index]=handler
             objPoly.objTriangle.addEventListener('click', handler)
         })
+        this.blnEventListenerAdded = true;
     }
 
     /**
@@ -259,11 +269,21 @@ class DotsAndBoxes {
     blnDontHavetoSend=false
     triangleOnClickWrapper(objPoly,index) {
         const objTriangleElement = objPoly.objTriangle;
-        const self=this
-        function triangleOnClick() {
-            // check if current player
-            if (this.objCurrentPlayer.intPlayerId !== this.objThisPlayer.intPlayerId) return;
 
+        function triangleOnClick(elem) {
+
+            if(!this.objThisPlayer){
+                if(Boolean(elem)) this.objThisPlayer = this.arrUsers[0];
+                else {
+                    this.blnIncomingFromOtherPlayer = true;
+                    this.objThisPlayer = this.arrUsers[1];
+                }
+            }
+            // check if this player click event or not since elem only if clicked
+            if (this.blnIncomingFromOtherPlayer && Boolean(elem)) return; 
+
+
+            
             const arrFirstPoint = arrPoints[0].split(",");
             const arrSecondPoint = arrPoints[1].split(",");
             objTriangleElement.classList.remove('untouched');
@@ -277,6 +297,7 @@ class DotsAndBoxes {
                 blnChangePlayer = false
             }
 
+            console.log(blnChangePlayer)
             const triangleHandler = this.triangleHandlers.get(objTriangleElement);
 
             objTriangleElement.removeEventListener('click', triangleHandler);
@@ -314,16 +335,20 @@ class DotsAndBoxes {
                 }
             }
 
-            // change to next player
-            if (true && !this.blnDontHavetoSend) {
-                self.sendToOherPlayer(index)
-            }else{
-                this.changePlayer();
+            // send index to other devices so that line is drawn on theirs
+            if (!this.blnIncomingFromOtherPlayer && !this.blnSameDevice){
+                // this.blnIncomingFromOtherPlayer = true;
+                this.sendToOherPlayer(index);
             }
-            this.blnDontHavetoSend=false
+
+            
+            // change to next player if no square filled
+            if(blnChangePlayer)
+                this.changePlayer();
+
             // if one device, current player and same player be same
-            if(this.blnSameDevice)
-                this.objThisPlayer = this.objCurrentPlayer;
+            // if(this.blnSameDevice)
+                // this.objThisPlayer = this.objCurrentPlayer;
             
         }
 
@@ -412,6 +437,7 @@ class DotsAndBoxes {
         if(intCurrentPlayer == this.arrUsers.length-1)
             this.objCurrentPlayer = this.arrUsers[0];
         else this.objCurrentPlayer = this.arrUsers[++intCurrentPlayer];
+        this.blnIncomingFromOtherPlayer = !this.blnIncomingFromOtherPlayer;
     }
     
     sendToOherPlayer (index) {
@@ -422,10 +448,16 @@ class DotsAndBoxes {
     }
 
     makeMovefromOpponent(index){
-        this.blnDontHavetoSend=true
-        if (this.EACH_HANDLER[index]) {
-            this.EACH_HANDLER[index]()
-        }
+        const blnFunction = this.triangleHandlers.has(this.arrAllTriangle?.[index]?.objTriangle)
+        if(blnFunction){
+            const drawFunction = this.triangleOnClickWrapper(this.arrAllTriangle?.[index], index);
+            drawFunction(null)
+        } 
+        // this.triangleOnClickWrapper(this.arrAllTriangle?.[index], index, true)();
+        // this.blnDontHavetoSend=true
+        // if (this.EACH_HANDLER[index]) {
+        //     this.EACH_HANDLER[index]()
+        // }
     }
     socketClient=undefined
     roomId=undefined
