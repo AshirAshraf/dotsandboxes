@@ -20,10 +20,9 @@ export class Player {
      */
     strPlayerName;
 
-    constructor(id, strColor, strPlayerName){
+    constructor(id, strColor){
         this.intPlayerId = id;
         this.strPlayerColor = strColor;
-        this.strPlayerName = strPlayerName;
     }
 
     setPlayerColor(strColor){

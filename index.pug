@@ -5,14 +5,35 @@ html(lang="en")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Press+Start+2P")
         link(rel="stylesheet", href="https://unpkg.com/nes.css@latest/css/nes.min.css")
-        link(rel="stylesheet", href="style.css")
-        script(src="https://cdn.jsdelivr.net/npm/umbrellajs") 
+        link(rel="stylesheet", href="style/style.css")
         title Dots and boxes
     body 
-        h3.title Dots and boxes
+        h3.title.text-center Dots and boxes
         main 
             div.wrapper
+                .d-flex.justify-content-between
+                    button(type="button").nes-btn.is-error.px#create-room-trigger create room 
+                    button(type="button").nes-btn.is-error.px#join-room-trigger join room
+                  
                 svg(width='100%' height='100%' viewbox='0 0 600 600' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink')
+
+                dialog.nes-dialog.is-dark.create-room
+                    .nes-container.is-dark.with-title
+                        p.title room id
+                        p#room-id
+                    input(type="text", name="enter-player-name", placeholder="enter player name")#enter-player1-name.nes-input.is-dark.mt-10
+                    p.text-center.mt-10 you play first!
+                    button(type="button").nes-btn.is-error.px#copy-close copy room id & close 
+                dialog.nes-dialog.is-dark.join-room 
+                    input(type="text", name="enter-room-id", placeholder="enter room id")#enter-room-id.nes-input.is-dark 
+                    input(type="text", name="enter-player-name", placeholder="enter player name")#enter-player2-name.nes-input.is-dark.mt-10
+                    p.text-center.mt-10 you play second!
+                    button(type="button").mt-10.nes-btn.is-error.px#join-room join room
+                .waiter
+                    p 
                     
 
-    script(src="script.js", type="module") 
+    script(src="https://cdn.socket.io/4.7.2/socket.io.min.js") 
+    script(src="js/script.js", type="module") 
+
+

@@ -101,12 +101,13 @@ class DotsAndBoxes {
      * input to be disregarded since its not his chance
      */
     objThisPlayer;
+    objOtherPlayer; // since its just 2 player for now
     /**
      * local or online
      */
     blnSameDevice = false;
 
-    dummyNames = ["zayd", "ahyan", "johnny", "adil"];
+    dummyNames = ["#1", "#2", "johnny", "adil"];
 
     intCurrentUser;
     /**
@@ -129,11 +130,36 @@ class DotsAndBoxes {
 
         this.setPlayers(intNoOfPlayers);
         // this.setThisPlayer(0);
-        this.setCurrentPlayer(0);
+        // this.setCurrentPlayer(0);
 
         this.makeGrid(intColumns, intRows)
+
+        this.setRoomButtonTriggers();
         this.objUser = new Player();
 
+    }
+
+    setRoomButtonTriggers(){
+        // , onclick="document.querySelector('.create-room').showModal();"
+        document.querySelector('#create-room-trigger').addEventListener('click', ()=>{
+            this.createRoom();
+            // modal showing done in roomCreated function
+        })
+        document.querySelector('#join-room-trigger').addEventListener('click', ()=>{
+            document.querySelector('.join-room').showModal();
+        })
+
+        document.querySelector('#copy-close').addEventListener('click', ()=>{
+            navigator.clipboard.writeText(this.roomId);
+            this.objThisPlayer.strPlayerName = document.querySelector('#enter-player1-name').value;
+            document.querySelector('.create-room').close();
+        })
+
+        document.querySelector('#join-room').addEventListener('click', ()=>{
+            
+            this.joinRoom(document.querySelector('#enter-room-id').value)
+            document.querySelector('.join-room').close();
+        })
     }
     /**
      * 
@@ -166,7 +192,7 @@ class DotsAndBoxes {
         }
 
         this.arrFilledBoxes = JSON.parse(JSON.stringify(this.arrBoxByBoxMatrix));
-        console.log(this.arrFilledBoxes)
+        
         this.arrBoxByBoxMatrix.forEach((arrRows, intColIndex) => {
             arrRows.forEach((arrEachBox, intRowIndex) => {
                 const corner1 = this.arrTotalMatrix[intColIndex][intRowIndex];
@@ -185,7 +211,7 @@ class DotsAndBoxes {
                 this.svg.append(objCircle.objCircle);
             })
         })
-        console.log(this.arrAllVertices)
+        
 
         this.arrBoxByBoxMatrix.forEach((arrRows) => {
             arrRows.forEach((arrCorners) => {
@@ -272,11 +298,15 @@ class DotsAndBoxes {
 
         function triangleOnClick(elem) {
 
-            if(!this.objThisPlayer){
-                if(Boolean(elem)) this.objThisPlayer = this.arrUsers[0];
+            if(!this.objThisPlayer && this.blnSameDevice){
+                if(Boolean(elem)) {
+                    this.objThisPlayer = this.arrUsers[0];
+                    this.objOtherPlayer = this.arrUsers[1];
+                }
                 else {
                     this.blnIncomingFromOtherPlayer = true;
                     this.objThisPlayer = this.arrUsers[1];
+                    this.objOtherPlayer = this.arrUsers[0];
                 }
             }
             // check if this player click event or not since elem only if clicked
@@ -297,7 +327,7 @@ class DotsAndBoxes {
                 blnChangePlayer = false
             }
 
-            console.log(blnChangePlayer)
+            
             const triangleHandler = this.triangleHandlers.get(objTriangleElement);
 
             objTriangleElement.removeEventListener('click', triangleHandler);
@@ -412,7 +442,9 @@ class DotsAndBoxes {
     setPlayers(intNo){
         for(let i = 0; i < intNo; i++){
             // set custom id for players here
-            const player = new Player(i, this.arrUserColors[i], this.dummyNames[i]);
+            const player = new Player(i, this.arrUserColors[i]);
+            if(this.blnSameDevice)
+                player.strPlayerName = this.dummyNames[i]
             this.arrUsers.push(player)
         }
     }
@@ -433,17 +465,12 @@ class DotsAndBoxes {
      * for local multiplayer
      */
     changePlayer(){
-        let intCurrentPlayer = this.arrUsers.findIndex((objPlayer)=> objPlayer.intPlayerId == this.objCurrentPlayer.intPlayerId);
-        if(intCurrentPlayer == this.arrUsers.length-1)
-            this.objCurrentPlayer = this.arrUsers[0];
-        else this.objCurrentPlayer = this.arrUsers[++intCurrentPlayer];
+        this.objCurrentPlayer = this.objCurrentPlayer.intPlayerId == this.objThisPlayer.intPlayerId ? this.objOtherPlayer : this.objThisPlayer;
         this.blnIncomingFromOtherPlayer = !this.blnIncomingFromOtherPlayer;
     }
-    
     sendToOherPlayer (index) {
         console.log("00000000000000 ----------------------  ");
-        
-        // this.socketClient
+
         this.socketClient.emit('make_move',{index,roomId:this.roomId})
     }
 
@@ -466,11 +493,28 @@ class DotsAndBoxes {
     }
     roomCreated(roomId){
         this.roomId=roomId
+        this.objThisPlayer = this.arrUsers[0];
+
+        this.objOtherPlayer = this.arrUsers[1];
+        this.objCurrentPlayer = this.objThisPlayer;
+        this.blnIncomingFromOtherPlayer = false; // since youre the first player
+
+        document.querySelector('.create-room p#room-id').textContent = roomId;
+        document.querySelector('.create-room').showModal();
         console.log("ROOM ID --- >>",roomId);
     }
     joinRoom(roomId){
-        this.roomId=roomId
+        this.roomId=roomId;
+        this.objThisPlayer = this.arrUsers[1];
+        this.objOtherPlayer = this.arrUsers[0];
+        this.objThisPlayer.strPlayerName = document.querySelector('#enter-player2-name').value;
+
+        this.objCurrentPlayer = this.objOtherPlayer;
+        this.blnIncomingFromOtherPlayer = true; // since youre the second player
         this.socketClient.emit('join_room',roomId)
+    }
+    startWaitingForOtherPlayer(){
+
     }
     connectSocketServer() {
         const socket = io('http://localhost:3000');
@@ -503,15 +547,7 @@ class DotsAndBoxes {
 try {
     
     let DAB= new DotsAndBoxes(4, 4)
-    DAB.connectSocketServer()
-    document.getElementById("enterBtn").addEventListener("click", () => {
-    const roomId = document.getElementById("roomId").value;
-    console.log("Room entered:", roomId);
-        DAB.joinRoom(roomId)
-    });
-    setTimeout(()=>{
-        DAB.createRoom()
-    },2000)
+    DAB.connectSocketServer();
 } catch (error) {
     console.error(error)   
 }
