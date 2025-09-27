@@ -152,6 +152,7 @@ class DotsAndBoxes {
         document.querySelector('#copy-close').addEventListener('click', ()=>{
             navigator.clipboard.writeText(this.roomId);
             this.objThisPlayer.strPlayerName = document.querySelector('#enter-player1-name').value;
+            this.setNameInRoom()
             document.querySelector('.create-room').close();
         })
 
@@ -368,7 +369,11 @@ class DotsAndBoxes {
             // send index to other devices so that line is drawn on theirs
             if (!this.blnIncomingFromOtherPlayer && !this.blnSameDevice){
                 // this.blnIncomingFromOtherPlayer = true;
-                this.sendToOherPlayer(index);
+                if (!blnChangePlayer) {
+                    this.sendToOherPlayer(index,true);
+                }else{
+                    this.sendToOherPlayer(index,false);
+                }
             }
 
             
@@ -468,10 +473,15 @@ class DotsAndBoxes {
         this.objCurrentPlayer = this.objCurrentPlayer.intPlayerId == this.objThisPlayer.intPlayerId ? this.objOtherPlayer : this.objThisPlayer;
         this.blnIncomingFromOtherPlayer = !this.blnIncomingFromOtherPlayer;
     }
-    sendToOherPlayer (index) {
-        console.log("00000000000000 ----------------------  ");
+    sendToOherPlayer (index,blnPoint) {
+        this.socketClient.emit('make_move',{index,blnPoint,roomId:this.roomId})
+    }
 
-        this.socketClient.emit('make_move',{index,roomId:this.roomId})
+    setNameInRoom(){
+        this.socketClient.emit('set_name_in_room',{
+                                roomId:this.roomId,
+                                playerName:this.objThisPlayer.strPlayerName
+                            })
     }
 
     makeMovefromOpponent(index){
@@ -489,6 +499,7 @@ class DotsAndBoxes {
     socketClient=undefined
     roomId=undefined
     createRoom() {
+        this.connectSocketServer()
         this.socketClient.emit("create_room",null)
     }
     roomCreated(roomId){
@@ -504,6 +515,9 @@ class DotsAndBoxes {
         console.log("ROOM ID --- >>",roomId);
     }
     joinRoom(roomId){
+        if (!this.socketClient) {
+            this.connectSocketServer()
+        }
         this.roomId=roomId;
         this.objThisPlayer = this.arrUsers[1];
         this.objOtherPlayer = this.arrUsers[0];
@@ -511,7 +525,7 @@ class DotsAndBoxes {
 
         this.objCurrentPlayer = this.objOtherPlayer;
         this.blnIncomingFromOtherPlayer = true; // since youre the second player
-        this.socketClient.emit('join_room',roomId)
+        this.socketClient.emit('join_room',{roomId,playerName:this.objThisPlayer.strPlayerName})
     }
     startWaitingForOtherPlayer(){
 
@@ -536,6 +550,11 @@ class DotsAndBoxes {
             console.log("************** ",values);
             this.makeMovefromOpponent(values.message.index)
         })
+
+        socket.on("room_joined",(values)=>{
+            this.objOtherPlayer.strPlayerName=values.oppPlayerName
+        })
+
         socket.on('chat message', function(msg) {
           const item = document.createElement('li');
           item.textContent = msg;
@@ -547,7 +566,7 @@ class DotsAndBoxes {
 try {
     
     let DAB= new DotsAndBoxes(4, 4)
-    DAB.connectSocketServer();
+    // DAB.connectSocketServer();
 } catch (error) {
     console.error(error)   
 }

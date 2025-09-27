@@ -43,15 +43,22 @@ io.on('connection', (socket) => {
     socket.emit("room_created",id)
   })
 
-  socket.on('join_room',(roomId)=>{
-    console.log(" OJIN ROOM --------------",roomId);
-    
+  socket.on('join_room',({roomId,playerName})=>{
+    console.log(" OJIN ROOM --------------",roomId,playerName);
+    let JoinedDetails
     if (ALL_ROOMS[roomId]) {
-      ALL_ROOMS[roomId].joinPlayerTwo(socket.id)
+       JoinedDetails=ALL_ROOMS[roomId].joinPlayerTwo(socket.id)
+       ALL_ROOMS[roomId].setName(socket.id,playerName)
     }
     socket.join(roomId)
+    socket.emit("room_joined",{oppPlayerName:JoinedDetails.oppName})
+    socket.to(JoinedDetails.oppsiteId).emit("room_joined",{oppPlayerName:playerName})
   })
-
+  socket.on('set_name_in_room',(val)=>{
+    if (val.roomId) {
+      ALL_ROOMS[val.roomId].setName(socket.id,val.playerName)
+    }
+  })
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -61,7 +68,9 @@ io.on('connection', (socket) => {
     
     if (ALL_ROOMS[value.roomId].checkCorrectMove(socket.id)) {
       socket.to(value.roomId).emit('next_Move', {message:value,from: socket.id});
-      ALL_ROOMS[value.roomId].rotateMove(socket.id)
+      if (!value.blnPoint) {
+        ALL_ROOMS[value.roomId].rotateMove(socket.id)
+      }
     }else{
       socket.emit('error_message', {message:"WRONG MOVE"});
     }
