@@ -527,6 +527,11 @@ class DotsAndBoxes {
         this.blnIncomingFromOtherPlayer = true; // since youre the second player
         this.socketClient.emit('join_room',{roomId,playerName:this.objThisPlayer.strPlayerName})
     }
+
+    joinRandom(){
+        
+    }
+
     startWaitingForOtherPlayer(){
 
     }
