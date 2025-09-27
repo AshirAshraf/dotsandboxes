@@ -1,15 +1,17 @@
 body {
     background-color: black;
-    height: 100vh;
+    height: 100%;
     width: 100vw;
 }
 
 * {
     color: white;
 }
+
 .text-center {
     text-align: center;
 }
+
 .mt-10 {
     margin-top: 10px;
 }
@@ -23,30 +25,33 @@ line {
 }
 
 line.dotted {
-    stroke: white;
-    display: none;
+    stroke: transparent;
+    display: block;
 }
 
-.nes-container.with-title > .title {
+.nes-container.with-title>.title {
     margin-top: -2.3rem;
 }
 
 .d-none {
-    display: none;
+    display: none !important;
 }
 
 .d-flex {
-    display: flex;
+    display: flex !important;
 }
 
 .justify-content-between {
     justify-content: space-between;
 }
 
-main div:has(+svg){
-    padding: 0 20px;
+#random-room-trigger {
+    width: auto;
 }
-main div:has(+svg) > button {
+.top-buttons-container {
+    margin: 40px 0;
+}
+main div:has(+svg)>button {
     width: 150px;
     font-size: 11px;
     height: 40px;
@@ -56,18 +61,20 @@ main div:has(+svg) > button {
     padding: 4px 8px 8px 8px;
 }
 
-button#join-room, button#copy-close {
+button#join-room,
+button#copy-close {
     margin-left: auto;
     margin-right: auto;
     display: block;
+    overflow: hidden;
 }
 
 polygon.triangle {
     fill: transparent;
 }
 
-polygon.triangle.untouched:hover+line.dotted {
-    display: block;
+line.dotted:has(+ polygon.triangle.untouched:hover) {
+    stroke: white;
     stroke-dasharray: 7px;
 }
 
@@ -81,4 +88,26 @@ circle {
     margin-left: auto;
     margin-right: auto;
     position: relative;
+}
+
+.waiting-for-player-button-loader {
+    animation: show 5s linear infinite;
+    text-wrap: nowrap;
+    margin-bottom: 0 !important;
+}
+
+@keyframes show {
+    0% {
+        margin-left: -100%;
+    }
+
+
+    50% {
+        margin-left: 0;
+    }
+
+
+    100% {
+        margin-left: 100%;
+    }
 }

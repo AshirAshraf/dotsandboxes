@@ -120,6 +120,12 @@ class DotsAndBoxes {
      */
     blnIncomingFromOtherPlayer = false;
 
+    /**
+     * game started or not
+     * if online, false till both parties are in the same room
+     * if offline, something ui wise, have=  to figuire it out
+     */
+    blnGameStarted = false;
 
     constructor(intColumns, intRows, intFullWidth = 600, intNoOfPlayers = 2) {
         this.intFullWidth = intFullWidth;
@@ -139,27 +145,51 @@ class DotsAndBoxes {
 
     }
 
-    setRoomButtonTriggers(){
+    toggleWaitingLoader(blnShowLoader){
+        if(blnShowLoader)
+            document.querySelector('#loader-wrapper').classList.remove('d-none');
+        else document.querySelector('#loader-wrapper').classList.add('d-none');
+    }
+
+    setRoomButtonTriggers() {
         // , onclick="document.querySelector('.create-room').showModal();"
-        document.querySelector('#create-room-trigger').addEventListener('click', ()=>{
+        document.querySelector('#create-room-trigger').addEventListener('click', () => {
             this.createRoom();
             // modal showing done in roomCreated function
         })
-        document.querySelector('#join-room-trigger').addEventListener('click', ()=>{
+        document.querySelector('#join-room-trigger').addEventListener('click', () => {
             document.querySelector('.join-room').showModal();
         })
 
-        document.querySelector('#copy-close').addEventListener('click', ()=>{
+        document.querySelector('#copy-close').addEventListener('click', (elem) => {
             navigator.clipboard.writeText(this.roomId);
-            this.objThisPlayer.strPlayerName = document.querySelector('#enter-player1-name').value;
+            this.objThisPlayer.strPlayerName = document.querySelector('#enter-player1-name').value || '#1';
             this.setNameInRoom()
             document.querySelector('.create-room').close();
+            console.log(1)
+            this.toggleWaitingLoader(true);
+            // if(this.objThisPlayer.strPlayerName)
+            //     elem.classList.add('waiting-for-player-button-loader')
+            // else document.querySelector('#enter-player1-name').classList.add('is-error');
         })
 
-        document.querySelector('#join-room').addEventListener('click', ()=>{
-            
+        document.querySelector('#join-room').addEventListener('click', () => {
+
             this.joinRoom(document.querySelector('#enter-room-id').value)
             document.querySelector('.join-room').close();
+            this.toggleWaitingLoader(true);
+            console.log(1)
+        })
+
+        document.querySelector('#random-room-trigger').addEventListener('click', () => {
+            document.querySelector('.random-room').showModal();
+
+        })
+
+        document.querySelector('#join-random-room').addEventListener('click', () => {
+            this.objThisPlayer.strPlayerName = document.querySelector('#enter-random-name').value || '#2';
+            document.querySelector('.random-room').close();
+            this.joinRandom();
         })
     }
     /**
@@ -193,7 +223,7 @@ class DotsAndBoxes {
         }
 
         this.arrFilledBoxes = JSON.parse(JSON.stringify(this.arrBoxByBoxMatrix));
-        
+
         this.arrBoxByBoxMatrix.forEach((arrRows, intColIndex) => {
             arrRows.forEach((arrEachBox, intRowIndex) => {
                 const corner1 = this.arrTotalMatrix[intColIndex][intRowIndex];
@@ -207,12 +237,12 @@ class DotsAndBoxes {
 
         this.arrTotalMatrix.forEach((arrRows, rowIndex) => {
             arrRows.forEach((arrColumns, colIndex) => {
-                const objCircle = new Vertice(arrColumns,[rowIndex, colIndex]);
+                const objCircle = new Vertice(arrColumns, [rowIndex, colIndex]);
                 this.arrAllVertices.push(objCircle);
                 this.svg.append(objCircle.objCircle);
             })
         })
-        
+
 
         this.arrBoxByBoxMatrix.forEach((arrRows) => {
             arrRows.forEach((arrCorners) => {
@@ -235,14 +265,14 @@ class DotsAndBoxes {
                 this.arrAllTriangle.push(triangle1, triangle2, triangle3, triangle4);
 
                 this.svg.append(square.objSquare);
-                this.svg.append(triangle1.objTriangle);
                 this.svg.append(line1.objLine);
-                this.svg.append(triangle2.objTriangle);
+                this.svg.append(triangle1.objTriangle);
                 this.svg.append(line2.objLine);
-                this.svg.append(triangle3.objTriangle);
+                this.svg.append(triangle2.objTriangle);
                 this.svg.append(line3.objLine);
-                this.svg.append(triangle4.objTriangle);
+                this.svg.append(triangle3.objTriangle);
                 this.svg.append(line4.objLine);
+                this.svg.append(triangle4.objTriangle);
 
             })
         })
@@ -258,16 +288,16 @@ class DotsAndBoxes {
     findCenter([x1, y1]) {
         const x = x1 + this.intCenterDist;
         const y = y1 + this.intCenterDist;
-        return [x,y]
+        return [x, y]
     }
 
-    EACH_HANDLER={}
+    EACH_HANDLER = {}
 
     addTriangleEventListener(arrTriangle) {
-        arrTriangle.forEach((objPoly,index) => {
-            const handler = this.triangleOnClickWrapper(objPoly,index);
+        arrTriangle.forEach((objPoly, index) => {
+            const handler = this.triangleOnClickWrapper(objPoly, index);
             this.triangleHandlers.set(objPoly.objTriangle, handler);
-            this.EACH_HANDLER[index]=handler
+            this.EACH_HANDLER[index] = handler
             objPoly.objTriangle.addEventListener('click', handler)
         })
         this.blnEventListenerAdded = true;
@@ -289,18 +319,20 @@ class DotsAndBoxes {
         if (intFirst !== intSecond) return [Math.min(intFirst, intSecond)];
         if (intFirst == 0) return [intFirst];
         if (intFirst == intColumnsOrRow) return [intFirst - 1];
-        return [intFirst, intFirst-1]
+        return [intFirst, intFirst - 1]
 
 
     }
-    blnDontHavetoSend=false
-    triangleOnClickWrapper(objPoly,index) {
+    blnDontHavetoSend = false
+    triangleOnClickWrapper(objPoly, index) {
         const objTriangleElement = objPoly.objTriangle;
 
         function triangleOnClick(elem) {
 
-            if(!this.objThisPlayer && this.blnSameDevice){
-                if(Boolean(elem)) {
+            if (!this.blnGameStarted) return;
+
+            if (!this.objThisPlayer && this.blnSameDevice) {
+                if (Boolean(elem)) {
                     this.objThisPlayer = this.arrUsers[0];
                     this.objOtherPlayer = this.arrUsers[1];
                 }
@@ -310,25 +342,26 @@ class DotsAndBoxes {
                     this.objOtherPlayer = this.arrUsers[0];
                 }
             }
+
             // check if this player click event or not since elem only if clicked
-            if (this.blnIncomingFromOtherPlayer && Boolean(elem)) return; 
+            if (this.blnIncomingFromOtherPlayer && Boolean(elem)) return;
 
 
-            
+
             const arrFirstPoint = arrPoints[0].split(",");
             const arrSecondPoint = arrPoints[1].split(",");
             objTriangleElement.classList.remove('untouched');
             const filledLine = new Line(arrFirstPoint, arrSecondPoint, false, this.objCurrentPlayer.strPlayerColor)
-            
+
             this.svg.append(filledLine.objLine);
             let blnChangePlayer = true;
             // sidefilled function returns true if all 4 sides are drawn
-            if(objPoly.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName)){
+            if (objPoly.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName)) {
                 this.objCurrentPlayer.intPoints++;
                 blnChangePlayer = false
             }
 
-            
+
             const triangleHandler = this.triangleHandlers.get(objTriangleElement);
 
             objTriangleElement.removeEventListener('click', triangleHandler);
@@ -352,11 +385,11 @@ class DotsAndBoxes {
              * triangle, we used 2,2 2,1 for 2nd box's right triangle i.e. switched the
              * position of the points. that's whats happening here
              */
-            const sisterTriangle = this.arrAllTriangle.find((objTriangle)=> arrPoints[0] == String(objTriangle.arrCoordinates[1]) && arrPoints[1] == String(objTriangle.arrCoordinates[0]))
+            const sisterTriangle = this.arrAllTriangle.find((objTriangle) => arrPoints[0] == String(objTriangle.arrCoordinates[1]) && arrPoints[1] == String(objTriangle.arrCoordinates[0]))
 
 
             if (!!sisterTriangle) {
-                if(sisterTriangle.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName))
+                if (sisterTriangle.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName))
                     this.objCurrentPlayer.intPoints++;
 
                 const handler = this.triangleHandlers.get(sisterTriangle.objTriangle);
@@ -367,24 +400,24 @@ class DotsAndBoxes {
             }
 
             // send index to other devices so that line is drawn on theirs
-            if (!this.blnIncomingFromOtherPlayer && !this.blnSameDevice){
+            if (!this.blnIncomingFromOtherPlayer && !this.blnSameDevice) {
                 // this.blnIncomingFromOtherPlayer = true;
                 if (!blnChangePlayer) {
-                    this.sendToOherPlayer(index,true);
-                }else{
-                    this.sendToOherPlayer(index,false);
+                    this.sendToOherPlayer(index, true);
+                } else {
+                    this.sendToOherPlayer(index, false);
                 }
             }
 
-            
+
             // change to next player if no square filled
-            if(blnChangePlayer)
+            if (blnChangePlayer)
                 this.changePlayer();
 
             // if one device, current player and same player be same
             // if(this.blnSameDevice)
-                // this.objThisPlayer = this.objCurrentPlayer;
-            
+            // this.objThisPlayer = this.objCurrentPlayer;
+
         }
 
         const arrPoints = objTriangleElement.attributes['points'].value.split(" ");
@@ -397,10 +430,10 @@ class DotsAndBoxes {
      * send triangle class object's arrCoordinates prop
      * @param {*} arrCoordinates 
      */
-    sideFilledDynamic(arrCoordinates){
+    sideFilledDynamic(arrCoordinates) {
         const strCoordinates = String(`${arrCoordinates[0]} ${arrCoordinates[1]}`)
         // 180,180 180,300 120,240
-        const objTriangle = this.arrAllTriangle.find(({arrCoordinates})=> String(`${arrCoordinates[0]} ${arrCoordinates[1]}`) == strCoordinates);
+        const objTriangle = this.arrAllTriangle.find(({ arrCoordinates }) => String(`${arrCoordinates[0]} ${arrCoordinates[1]}`) == strCoordinates);
 
         this.triangleOnClickWrapper(objTriangle)();
     }
@@ -444,11 +477,11 @@ class DotsAndBoxes {
      * set players
      * param int no of players
      */
-    setPlayers(intNo){
-        for(let i = 0; i < intNo; i++){
+    setPlayers(intNo) {
+        for (let i = 0; i < intNo; i++) {
             // set custom id for players here
             const player = new Player(i, this.arrUserColors[i]);
-            if(this.blnSameDevice)
+            if (this.blnSameDevice)
                 player.strPlayerName = this.dummyNames[i]
             this.arrUsers.push(player)
         }
@@ -456,54 +489,54 @@ class DotsAndBoxes {
     /**
      * set current player
      */
-    setCurrentPlayer(playerId){
-        this.objCurrentPlayer = this.arrUsers.find((objPlayer)=> objPlayer.intPlayerId == playerId);
+    setCurrentPlayer(playerId) {
+        this.objCurrentPlayer = this.arrUsers.find((objPlayer) => objPlayer.intPlayerId == playerId);
     }
-        /**
-     * set current player
-     */
-    setThisPlayer(playerId){
-        this.objThisPlayer = this.arrUsers.find((objPlayer)=> objPlayer.intPlayerId == playerId);
+    /**
+ * set current player
+ */
+    setThisPlayer(playerId) {
+        this.objThisPlayer = this.arrUsers.find((objPlayer) => objPlayer.intPlayerId == playerId);
     }
     /**
      * change player
      * for local multiplayer
      */
-    changePlayer(){
+    changePlayer() {
         this.objCurrentPlayer = this.objCurrentPlayer.intPlayerId == this.objThisPlayer.intPlayerId ? this.objOtherPlayer : this.objThisPlayer;
         this.blnIncomingFromOtherPlayer = !this.blnIncomingFromOtherPlayer;
     }
-    sendToOherPlayer (index,blnPoint) {
-        this.socketClient.emit('make_move',{index,blnPoint,roomId:this.roomId})
+    sendToOherPlayer(index, blnPoint) {
+        this.socketClient.emit('make_move', { index, blnPoint, roomId: this.roomId })
     }
 
-    setNameInRoom(){
-        this.socketClient.emit('set_name_in_room',{
-                                roomId:this.roomId,
-                                playerName:this.objThisPlayer.strPlayerName
-                            })
+    setNameInRoom() {
+        this.socketClient.emit('set_name_in_room', {
+            roomId: this.roomId,
+            playerName: this.objThisPlayer.strPlayerName
+        })
     }
 
-    makeMovefromOpponent(index){
+    makeMovefromOpponent(index) {
         const blnFunction = this.triangleHandlers.has(this.arrAllTriangle?.[index]?.objTriangle)
-        if(blnFunction){
+        if (blnFunction) {
             const drawFunction = this.triangleOnClickWrapper(this.arrAllTriangle?.[index], index);
             drawFunction(null)
-        } 
+        }
         // this.triangleOnClickWrapper(this.arrAllTriangle?.[index], index, true)();
         // this.blnDontHavetoSend=true
         // if (this.EACH_HANDLER[index]) {
         //     this.EACH_HANDLER[index]()
         // }
     }
-    socketClient=undefined
-    roomId=undefined
+    socketClient = undefined
+    roomId = undefined
     createRoom() {
         this.connectSocketServer()
-        this.socketClient.emit("create_room",null)
+        this.socketClient.emit("create_room", null)
     }
-    roomCreated(roomId){
-        this.roomId=roomId
+    roomCreated(roomId) {
+        this.roomId = roomId
         this.objThisPlayer = this.arrUsers[0];
 
         this.objOtherPlayer = this.arrUsers[1];
@@ -512,66 +545,70 @@ class DotsAndBoxes {
 
         document.querySelector('.create-room p#room-id').textContent = roomId;
         document.querySelector('.create-room').showModal();
-        console.log("ROOM ID --- >>",roomId);
+        console.log("ROOM ID --- >>", roomId);
     }
-    joinRoom(roomId){
+    joinRoom(roomId) {
         if (!this.socketClient) {
             this.connectSocketServer()
         }
-        this.roomId=roomId;
+        this.roomId = roomId;
         this.objThisPlayer = this.arrUsers[1];
         this.objOtherPlayer = this.arrUsers[0];
         this.objThisPlayer.strPlayerName = document.querySelector('#enter-player2-name').value;
 
         this.objCurrentPlayer = this.objOtherPlayer;
         this.blnIncomingFromOtherPlayer = true; // since youre the second player
-        this.socketClient.emit('join_room',{roomId,playerName:this.objThisPlayer.strPlayerName})
+        this.socketClient.emit('join_room', { roomId, playerName: this.objThisPlayer.strPlayerName })
     }
 
-    joinRandom(){
-        
+    joinRandom() {
+
     }
 
-    startWaitingForOtherPlayer(){
+    startWaitingForOtherPlayer() {
 
     }
     connectSocketServer() {
         const socket = io('http://localhost:3000');
-        this.socketClient=socket
+        this.socketClient = socket
         function sendMessage() {
-          const input = document.getElementById('message');
-          const msg = input.value;
-          socket.emit('chat message', msg);
-          input.value = '';
+            const input = document.getElementById('message');
+            const msg = input.value;
+            socket.emit('chat message', msg);
+            input.value = '';
         }
-        socket.on("room_created",(roomId)=>{
+        socket.on("room_created", (roomId) => {
             this.roomCreated(roomId)
         })
-        socket.on("error_message",(message)=>{
+        socket.on("error_message", (message) => {
             console.log(message);
-            
+
         })
-        socket.on("next_Move",(values)=>{
-            console.log("************** ",values);
+        socket.on("next_Move", (values) => {
+            console.log("************** ", values);
             this.makeMovefromOpponent(values.message.index)
         })
 
-        socket.on("room_joined",(values)=>{
-            this.objOtherPlayer.strPlayerName=values.oppPlayerName
+        socket.on("room_joined", (values) => {
+            this.objOtherPlayer.strPlayerName = values.oppPlayerName;
+            this.blnGameStarted = true;
+            console.log(2)
+            this.toggleWaitingLoader(false);
         })
 
-        socket.on('chat message', function(msg) {
-          const item = document.createElement('li');
-          item.textContent = msg;
-          document.getElementById('messages').appendChild(item);
+        socket.on('chat message', function (msg) {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            document.getElementById('messages').appendChild(item);
         });
     }
 
+
 }
 try {
-    
-    let DAB= new DotsAndBoxes(4, 4)
+
+    let DAB = new DotsAndBoxes(4, 4)
     // DAB.connectSocketServer();
 } catch (error) {
-    console.error(error)   
+    console.error(error)
 }
