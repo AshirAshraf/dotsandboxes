@@ -599,14 +599,17 @@ class DotsAndBoxes {
             if(values.youFirst){
                 this.objThisPlayer = this.arrUsers[0];
                 this.objOtherPlayer = this.arrUsers[1];
+                this.objCurrentPlayer = this.objThisPlayer;
             } else {
                 this.objThisPlayer = this.arrUsers[1];
                 this.objOtherPlayer = this.arrUsers[0];
+                this.objCurrentPlayer = this.objOtherPlayer
             }
             this.objOtherPlayer.strPlayerName = values.oppositename;
             this.objThisPlayer.strPlayerName = this.strRandomName;
-
+           
             this.blnGameStarted = true;
+            this.roomId = values.roomId;
             this.toggleWaitingLoader(false);
             
         })
