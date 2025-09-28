@@ -148,8 +148,8 @@ class DotsAndBoxes {
 
     }
 
-    toggleWaitingLoader(blnShowLoader){
-        if(blnShowLoader)
+    toggleWaitingLoader(blnShowLoader) {
+        if (blnShowLoader)
             document.querySelector('#loader-wrapper').classList.remove('d-none');
         else document.querySelector('#loader-wrapper').classList.add('d-none');
     }
@@ -181,12 +181,14 @@ class DotsAndBoxes {
             this.joinRoom(document.querySelector('#enter-room-id').value)
             document.querySelector('.join-room').close();
             this.toggleWaitingLoader(true);
-            console.log(1)
+        })
+
+        document.querySelector('#close-join-room').addEventListener('click', () => {
+            document.querySelector('.join-room').close();
         })
 
         document.querySelector('#random-room-trigger').addEventListener('click', () => {
             document.querySelector('.random-room').showModal();
-
         })
 
         document.querySelector('#join-random-room').addEventListener('click', () => {
@@ -194,6 +196,22 @@ class DotsAndBoxes {
             document.querySelector('.random-room').close();
             this.joinRandom(document.querySelector('#enter-random-name').value);
         })
+
+        document.querySelector('#close-join-random-room').addEventListener('click', () => {
+            document.querySelector('.random-room').close();
+        })
+    }
+    youPlayFirstNotification() {
+        document.querySelector("div#play-first").classList.toggle('show');
+        setTimeout(() => {
+            document.querySelector("div#play-first").classList.toggle('show');
+        }, 3000);
+    }
+    youPlaySecondNotification() {
+        document.querySelector("div#play-second").classList.toggle('show');
+        setTimeout(() => {
+            document.querySelector("div#play-second").classList.toggle('show');
+        }, 3000);
     }
     /**
      * 
@@ -564,13 +582,13 @@ class DotsAndBoxes {
         this.socketClient.emit('join_room', { roomId, playerName: this.objThisPlayer.strPlayerName })
     }
 
-    joinRandom(name){
+    joinRandom(name) {
         console.log("-----------------------JOIN RANDOM");
         this.toggleWaitingLoader(true);
         this.connectSocketServer()
-        this.socketClient.emit('join_random',{playerName:name})
+        this.socketClient.emit('join_random', { playerName: name })
     }
-ś
+    ś
     startWaitingForOtherPlayer() {
 
     }
@@ -596,24 +614,29 @@ class DotsAndBoxes {
         })
         socket.on("random_joined", (values) => {
             console.log("************** random_joined ", values);
-            if(values.youFirst){
+
+            this.toggleWaitingLoader(false);
+            if (values.youFirst) {
                 this.objThisPlayer = this.arrUsers[0];
                 this.objOtherPlayer = this.arrUsers[1];
                 this.objCurrentPlayer = this.objThisPlayer;
                 this.blnIncomingFromOtherPlayer = false;
+                this.youPlayFirstNotification();
             } else {
                 this.objThisPlayer = this.arrUsers[1];
                 this.objOtherPlayer = this.arrUsers[0];
                 this.objCurrentPlayer = this.objOtherPlayer
                 this.blnIncomingFromOtherPlayer = true;
+                this.youPlaySecondNotification();
             }
             this.objOtherPlayer.strPlayerName = values.oppositename;
             this.objThisPlayer.strPlayerName = this.strRandomName;
-           
+
             this.blnGameStarted = true;
             this.roomId = values.roomId;
-            this.toggleWaitingLoader(false);
-            
+
+
+
         })
         socket.on("room_joined", (values) => {
             this.objOtherPlayer.strPlayerName = values.oppPlayerName;

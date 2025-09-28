@@ -45,6 +45,10 @@ line.dotted {
     justify-content: space-between;
 }
 
+.justify-content-center {
+    justify-content: center;
+}
+
 #random-room-trigger {
     width: auto;
 }
@@ -61,7 +65,6 @@ main div:has(+svg)>button {
     padding: 4px 8px 8px 8px;
 }
 
-button#join-room,
 button#copy-close {
     margin-left: auto;
     margin-right: auto;
@@ -90,11 +93,41 @@ circle {
     position: relative;
 }
 
-.waiting-for-player-button-loader {
+div#play-first, div#play-second {
+    position: absolute;
+    display: none;
+    top: 0;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+div#play-first.show, div#play-second.show {
+    display: flex;
+}
+p#play-first, p#play-second  {
+    transform: translate(200%);
+}
+div#play-first.show > p#play-first, div#play-second.show > p#play-second {
+    animation: move 3s linear;
+    animation-iteration-count: 1;
+}
+
+@keyframes move {
+    from {
+        transform: translate(184%);
+    }
+    to {
+        transform: translate(-184%);
+    }
+}
+
+/* .waiting-for-player-button-loader {
     animation: show 5s linear infinite;
     text-wrap: nowrap;
     margin-bottom: 0 !important;
-}
+} */
 
 @keyframes show {
     0% {
