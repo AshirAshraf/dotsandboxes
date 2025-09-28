@@ -73,13 +73,18 @@ io.on('connection', (socket) => {
   socket.on('make_move',(value)=>{
     console.log("========================",value);
     console.log(ALL_ROOMS[value.roomId]);
+    console.log(ALL_ROOMS);
     
     if (ALL_ROOMS[value.roomId].checkCorrectMove(socket.id)) {
+      console.log("------NEXT MOVE ----");
+      
       socket.to(value.roomId).emit('next_Move', {message:value,from: socket.id});
       if (!value.blnPoint) {
         ALL_ROOMS[value.roomId].rotateMove(socket.id)
       }
     }else{
+      console.log("wrong movr");
+      
       socket.emit('error_message', {message:"WRONG MOVE"});
     }
 
