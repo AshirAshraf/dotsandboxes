@@ -1,14 +1,10 @@
-// const express = require('express');
 import express from "express";
 import http from "http";
-// const http = require('http');
-// const { Server } = require('socket.io');
 import { Server } from "socket.io";
-// const { v4 }  import('uuid');
 import { v4 } from "uuid";
 import Room from "./roomLibs.js";
-// const Room=require('./roomLibs')
-// Create Express app
+import {joinRandomHandler} from "./roomLibs.js";
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -27,8 +23,12 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 const ALL_ROOMS={}
+const onlineUsers = new Map(); // userId -> socket.id
+
+const RANDOM_QUEUE=[]
 // Socket.IO logic
 io.on('connection', (socket) => {
+  // onlineUsers.set(socket.id, true);
   console.log('A user connected:', socket.id);
   //   socket.join("room111")
   // socket.on('chat message', (msg) => {
@@ -59,7 +59,13 @@ io.on('connection', (socket) => {
       ALL_ROOMS[val.roomId].setName(socket.id,val.playerName)
     }
   })
+
+  socket.on('join_random',(val)=>{
+    joinRandomHandler(RANDOM_QUEUE,val,socket.id,onlineUsers,socket,ALL_ROOMS,io)
+  })
+
   socket.on('disconnect', () => {
+    onlineUsers.delete(socket.id);
     console.log('User disconnected:', socket.id);
   });
   socket.on('make_move',(value)=>{

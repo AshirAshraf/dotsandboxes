@@ -529,7 +529,7 @@ class DotsAndBoxes {
     }
 
     joinRandom(){
-        
+        this.socketClient.emit('join_random',{playerName:this.objThisPlayer.strPlayerName})
     }
 
     startWaitingForOtherPlayer(){
@@ -557,6 +557,8 @@ class DotsAndBoxes {
         })
 
         socket.on("room_joined",(values)=>{
+            console.log("=================rom joined");
+            
             this.objOtherPlayer.strPlayerName=values.oppPlayerName
         })
 

@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 class Player {
     playerId
     #name
@@ -20,6 +21,7 @@ class Room {
     #player1
     #player2
     #currentPlayer
+    #privateRoom=true
     #playerIdMapper={}
     constructor(id,p1Id) {
         this.#roomId=id
@@ -53,4 +55,38 @@ class Room {
 
 }
 
+function joinRandomHandler(RANDOM_QUEUE=[],playerDet,playerId,onlineUsers,socket,ALL_ROOMS,io){
+    let player=new Player(playerId)
+    player.setName(playerDet.playerName)
+    // onlineUsers.set(socket.id, player);
+    const firstKey = onlineUsers.keys().next().value;
+    if (firstKey) {
+        let player1=onlineUsers.get(firstKey)
+        const id = v4();
+        ALL_ROOMS[id]=new Room(id,player1.playerId)
+        ALL_ROOMS[id].setName(player1.playerId,player1.getName())
+        ALL_ROOMS[id].joinPlayerTwo(player.playerId)
+        ALL_ROOMS[id].setName(player.playerId,player.getName())
+        const targetSocket = io.sockets.sockets.get(targetSocketId);
+        if (targetSocket) {
+            targetSocket.join(id); 
+            socket.join(id)
+            socket.to(player.playerId).emit({roomId:id,oppositename:player1.getName()})
+            socket.to(player1.playerId).emit({roomId:id,oppositename:player.getName()})
+            console.log("target joined ------------");
+            
+        }else{
+            console.error("no target exist -----------------");
+            
+        }
+        socket.join(id)
+
+        socket.join(firstKey)
+    }else{
+        onlineUsers.set(socket.id, player);
+    }
+
+}
+
 export default Room
+export {joinRandomHandler}
