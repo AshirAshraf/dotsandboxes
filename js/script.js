@@ -126,7 +126,10 @@ class DotsAndBoxes {
      * if offline, something ui wise, have=  to figuire it out
      */
     blnGameStarted = false;
-
+    /**
+     * random player name
+     */
+    strRandomName
     constructor(intColumns, intRows, intFullWidth = 600, intNoOfPlayers = 2) {
         this.intFullWidth = intFullWidth;
         this.intPadding = this.intFullWidth / 10;
@@ -187,7 +190,7 @@ class DotsAndBoxes {
         })
 
         document.querySelector('#join-random-room').addEventListener('click', () => {
-            // this.objThisPlayer.strPlayerName = document.querySelector('#enter-random-name').value || '#2';
+            this.strRandomName = document.querySelector('#enter-random-name').value || '#2';
             document.querySelector('.random-room').close();
             this.joinRandom(document.querySelector('#enter-random-name').value);
         })
@@ -563,6 +566,7 @@ class DotsAndBoxes {
 
     joinRandom(name){
         console.log("-----------------------JOIN RANDOM");
+        this.toggleWaitingLoader(true);
         this.connectSocketServer()
         this.socketClient.emit('join_random',{playerName:name})
     }
@@ -592,7 +596,19 @@ class DotsAndBoxes {
         })
         socket.on("random_joined", (values) => {
             console.log("************** random_joined ", values);
-            // this.makeMovefromOpponent(values.message.index)
+            if(values.youFirst){
+                this.objThisPlayer = this.arrUsers[0];
+                this.objOtherPlayer = this.arrUsers[1];
+            } else {
+                this.objThisPlayer = this.arrUsers[1];
+                this.objOtherPlayer = this.arrUsers[0];
+            }
+            this.objOtherPlayer.strPlayerName = values.oppositename;
+            this.objThisPlayer.strPlayerName = this.strRandomName;
+
+            this.blnGameStarted = true;
+            this.toggleWaitingLoader(false);
+            
         })
         socket.on("room_joined", (values) => {
             this.objOtherPlayer.strPlayerName = values.oppPlayerName;
