@@ -600,10 +600,12 @@ class DotsAndBoxes {
                 this.objThisPlayer = this.arrUsers[0];
                 this.objOtherPlayer = this.arrUsers[1];
                 this.objCurrentPlayer = this.objThisPlayer;
+                this.blnIncomingFromOtherPlayer = false;
             } else {
                 this.objThisPlayer = this.arrUsers[1];
                 this.objOtherPlayer = this.arrUsers[0];
                 this.objCurrentPlayer = this.objOtherPlayer
+                this.blnIncomingFromOtherPlayer = true;
             }
             this.objOtherPlayer.strPlayerName = values.oppositename;
             this.objThisPlayer.strPlayerName = this.strRandomName;
