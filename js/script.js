@@ -187,9 +187,9 @@ class DotsAndBoxes {
         })
 
         document.querySelector('#join-random-room').addEventListener('click', () => {
-            this.objThisPlayer.strPlayerName = document.querySelector('#enter-random-name').value || '#2';
+            // this.objThisPlayer.strPlayerName = document.querySelector('#enter-random-name').value || '#2';
             document.querySelector('.random-room').close();
-            this.joinRandom();
+            this.joinRandom(document.querySelector('#enter-random-name').value);
         })
     }
     /**
@@ -561,10 +561,12 @@ class DotsAndBoxes {
         this.socketClient.emit('join_room', { roomId, playerName: this.objThisPlayer.strPlayerName })
     }
 
-    joinRandom(){
-        this.socketClient.emit('join_random',{playerName:this.objThisPlayer.strPlayerName})
+    joinRandom(name){
+        console.log("-----------------------JOIN RANDOM");
+        this.connectSocketServer()
+        this.socketClient.emit('join_random',{playerName:name})
     }
-
+ś
     startWaitingForOtherPlayer() {
 
     }
@@ -588,7 +590,10 @@ class DotsAndBoxes {
             console.log("************** ", values);
             this.makeMovefromOpponent(values.message.index)
         })
-
+        socket.on("random_joined", (values) => {
+            console.log("************** random_joined ", values);
+            // this.makeMovefromOpponent(values.message.index)
+        })
         socket.on("room_joined", (values) => {
             this.objOtherPlayer.strPlayerName = values.oppPlayerName;
             this.blnGameStarted = true;

@@ -61,6 +61,8 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join_random',(val)=>{
+    console.log("====================== JOIN RANDOM ===============");
+    
     joinRandomHandler(RANDOM_QUEUE,val,socket.id,onlineUsers,socket,ALL_ROOMS,io)
   })
 
