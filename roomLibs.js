@@ -71,8 +71,8 @@ function joinRandomHandler(RANDOM_QUEUE=[],playerDet,playerId,onlineUsers,socket
         if (targetSocket) {
             targetSocket.join(id); 
             socket.join(id)            
-            socket.to(player1.playerId).emit('random_joined',{roomId:id,oppositename:player.getName(),youFirst:true})
-            targetSocket.to(player.playerId).emit('random_joined',{roomId:id,oppositename:player1.getName(),youFirst:false})
+            socket.to(player1.playerId).emit('random_joined',{roomId:id,oppositename:player.getName(),youFirst:false})
+            targetSocket.to(player.playerId).emit('random_joined',{roomId:id,oppositename:player1.getName(),youFirst:true})
             console.log("target joined ------------");
             
         }else{
