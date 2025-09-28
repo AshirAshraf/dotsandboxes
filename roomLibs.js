@@ -64,15 +64,19 @@ function joinRandomHandler(RANDOM_QUEUE=[],playerDet,playerId,onlineUsers,socket
         let player1=onlineUsers.get(firstKey)
         const id = v4();
         ALL_ROOMS[id]=new Room(id,player1.playerId)
+        console.log(ALL_ROOMS[id]);
+        
         ALL_ROOMS[id].setName(player1.playerId,player1.getName())
         ALL_ROOMS[id].joinPlayerTwo(player.playerId)
         ALL_ROOMS[id].setName(player.playerId,player.getName())
         const targetSocket = io.sockets.sockets.get(player1.playerId);
         if (targetSocket) {
             targetSocket.join(id); 
-            socket.join(id)            
-            socket.to(player1.playerId).emit('random_joined',{roomId:id,oppositename:player.getName(),youFirst:false})
-            targetSocket.to(player.playerId).emit('random_joined',{roomId:id,oppositename:player1.getName(),youFirst:true})
+            socket.join(id)  
+            console.log({player1,player});
+                      
+            socket.emit('random_joined',{roomId:id,oppositename:player.getName(),youFirst:false})
+            targetSocket.emit('random_joined',{roomId:id,oppositename:player1.getName(),youFirst:true})
             console.log("target joined ------------");
             
         }else{
