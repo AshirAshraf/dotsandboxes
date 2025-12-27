@@ -420,7 +420,7 @@ class DotsAndBoxes {
                 this.objCurrentPlayer.intPoints++;
                 blnChangePlayer = false;
                 this.intSidesFilled++;
-                if(2 == this.intSidesFilled)
+                if(this.intColumns*this.intRows== this.intSidesFilled)
                     this.allSidesFilled()
             }
 
@@ -455,7 +455,7 @@ class DotsAndBoxes {
                 if (sisterTriangle.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName)){
                     this.objCurrentPlayer.intPoints++;
                     this.intSidesFilled++;
-                    if(2 == this.intSidesFilled)
+                    if(this.intColumns*this.intRows == this.intSidesFilled)
                         this.allSidesFilled()
                 }
 
