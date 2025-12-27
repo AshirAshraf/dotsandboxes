@@ -130,6 +130,11 @@ class DotsAndBoxes {
      * random player name
      */
     strRandomName
+    /**
+     * no of sides filled
+     */
+    intSidesFilled = 0;
+
     constructor(intColumns, intRows, intFullWidth = 600, intNoOfPlayers = 2) {
         this.intFullWidth = intFullWidth;
         this.intPadding = this.intFullWidth / 10;
@@ -345,6 +350,40 @@ class DotsAndBoxes {
 
     }
     blnDontHavetoSend = false
+
+    allSidesFilled(){
+        // this.objThisPlayer.intPoints > this.objOtherPlayer.intPoints ? "you wonn!" : "johny won!";
+        let blnYouWon = this.objThisPlayer.intPoints > this.objOtherPlayer.intPoints;
+        let domWinLostWrapperDiv = document.querySelector("#win-lost-wrapper");
+        domWinLostWrapperDiv.classList.toggle('d-none');
+        domWinLostWrapperDiv.classList.add(blnYouWon ? "won" : "lost");
+        let strMsg = blnYouWon ? "you won! yey!" : "you lost! womp womp";
+        // type js plugin
+        let typeJsText = document.querySelector("#win-lost-wrapper h1");
+        let textArray = strMsg.split("");
+        let counter = -1;
+
+        typeJsText.innerHTML = "";
+
+        function typeJs() {
+            if (counter < strMsg.length) {
+                counter++;
+                typeJsText.innerHTML += strMsg.charAt(counter);
+                textArray = strMsg.split("");
+            }
+        }
+
+        setTimeout(() => {
+            let intervalId = setInterval(() => {
+                typeJs();
+            }, 100);
+    
+            if(counter > 20)
+                clearInterval(intervalId);
+        }, 200);
+        return;
+    }
+
     triangleOnClickWrapper(objPoly, index) {
         const objTriangleElement = objPoly.objTriangle;
 
@@ -379,7 +418,10 @@ class DotsAndBoxes {
             // sidefilled function returns true if all 4 sides are drawn
             if (objPoly.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName)) {
                 this.objCurrentPlayer.intPoints++;
-                blnChangePlayer = false
+                blnChangePlayer = false;
+                this.intSidesFilled++;
+                if(2 == this.intSidesFilled)
+                    this.allSidesFilled()
             }
 
 
@@ -410,8 +452,12 @@ class DotsAndBoxes {
 
 
             if (!!sisterTriangle) {
-                if (sisterTriangle.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName))
+                if (sisterTriangle.sideFilled(this.objCurrentPlayer.strPlayerColor, this.objCurrentPlayer.strPlayerName)){
                     this.objCurrentPlayer.intPoints++;
+                    this.intSidesFilled++;
+                    if(2 == this.intSidesFilled)
+                        this.allSidesFilled()
+                }
 
                 const handler = this.triangleHandlers.get(sisterTriangle.objTriangle);
                 if (handler) {

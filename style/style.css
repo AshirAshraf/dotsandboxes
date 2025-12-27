@@ -144,3 +144,31 @@ div#play-first.show > p#play-first, div#play-second.show > p#play-second {
         margin-left: 100%;
     }
 }
+
+#win-lost-wrapper {
+    position: absolute;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background: rgb(0, 0, 0, 0.7);
+}
+
+#win-lost-wrapper:not(.d-none){
+    display: flex;
+}
+
+#win-lost-wrapper h1 {
+    display: none;
+}
+
+#win-lost-wrapper.won h1 {
+    display: block;
+    color: greenyellow;
+}
+
+#win-lost-wrapper.lost h1 {
+    display: block;
+    color: red;
+}
